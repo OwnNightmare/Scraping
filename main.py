@@ -12,12 +12,13 @@ def get_headers():
 
 
 def web_scraping(search_in: str):
-    KEYWORDS = {'Дизайн',"Web", 'Python', 'IT-инфраструктура', "Здоровье", "История IT", 'Карьера в IT-индустрии'}
+    KEYWORDS = {'Дизайн', "Web", 'Python', 'IT-инфраструктура', "Здоровье", "История IT", 'Карьера в IT-индустрии'}
     habr_main = 'https://habr.com'
 
     headers = get_headers()
 
     response = requests.get('https://habr.com/ru/all', headers=headers)
+    # Не понимаю как здесь работают headers: если передать пустую строку - результат тот же
     response.raise_for_status()
     text = response.text
     soup = BeautifulSoup(text, features='html.parser')
