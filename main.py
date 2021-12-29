@@ -60,9 +60,10 @@ def web_scraping(search_in: str):
             soup_article = BeautifulSoup(text_article, features='html.parser')
             content_tag = soup_article.find('article', class_="tm-article-presenter__content tm-article-presenter__content_narrow")
             try:
-                article_text = content_tag.get_text()
-            except AttributeError:
+                article_text = content_tag.text
+            except AttributeError as error:
                 content_tag = soup_article.find('div', id='post-content-body')
+                # print(error)
             article_text = content_tag.get_text().split()
             if KEYWORDS.intersection(article_text):
                 print(f"{number}.{date} - {article_title} - {habr_main + href}")
@@ -76,7 +77,7 @@ if __name__ == '__main__':
         print('Статьи, найденные на Хабре по превью:')
         web_scraping('preview')
     elif user_input == '2':
-        print('Статьи, найденные на Хабре по тэгам:')
+        print('Статьи, найденные на Хабре по тегам:')
         web_scraping('tags')
     elif user_input == '3':
         print('Статьи, найденные на Хабре по просмотру всей статьи:')
