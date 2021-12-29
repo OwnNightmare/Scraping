@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import make_json
-# import tqdm
 
 
 def get_headers():
@@ -13,7 +12,8 @@ def get_headers():
 
 
 def web_scraping(search_in: str):
-    KEYWORDS = {'Дизайн', "Web", 'Python', 'IT-инфраструктура', "Здоровье", "История IT", 'Карьера в IT-индустрии'}
+    KEYWORDS = {'Дизайн', "Web", 'Python', 'IT-инфраструктура', "Здоровье", "История IT", 'Карьера в IT-индустрии',
+                'SmartSpeech'}
     habr_main = 'https://habr.com'
 
     headers = get_headers()
@@ -25,34 +25,47 @@ def web_scraping(search_in: str):
     soup = BeautifulSoup(text, features='html.parser')
     articles = soup.find_all('article')
     number = 1
-    for article in articles:  # Здесь был tqdm
-        hubs = article.find_all('a', class_="tm-article-snippet__hubs-item-link")
-        title = article.find('a', class_='tm-article-snippet__title-link')
-        date_article = article.find('span', class_='tm-article-snippet__datetime-published')
-        preview = article.find('div', class_="tm-article-snippet").text.split()
-        hubs = set(hub.find('span').text for hub in hubs)
-        span_title = title.find('span').text
-        date_title = date_article.find('time').get('title')
+    for article in articles:
+        preview = article.find('div', class_="tm-article-snippet")
+        if preview:
+            preview = preview.text.split()
+            hubs = article.find_all('a', class_="tm-article-snippet__hubs-item-link")
+            title = article.find('a', class_='tm-article-snippet__title-link')
+            href = title.get('href')
+            date_tag = article.find('span', class_='tm-article-snippet__datetime-published')
+            hubs = set(hub.find('span').text for hub in hubs)
+            article_title = title.find('span').text
+            date = date_tag.find('time').get('title')
+        else:
+            preview = article.find('div', class_='tm-megapost-snippet').text
+            preview = preview.split()
+            article_title = article.find('h2', class_='tm-megapost-snippet__title').text
+            date = article.find('time').get('title')
+            href = article.find('a', class_='tm-megapost-snippet__link tm-megapost-snippet__date').get('href')
+            hubs = article.find_all('li', class_="tm-megapost-snippet__hub")
+            hubs = set(hub.find('span').text for hub in hubs)
         if search_in == 'preview':
             if KEYWORDS.intersection(preview):
-                print(f"{number}.{date_title} - {span_title} - {habr_main + title.get('href')}")
+                print(f"{number}.{date} - {article_title} - {habr_main + href}")
                 number += 1
             elif article == articles[0]:  # Если нет пересечений, и для проверки актуальности получаемых статей
-                print(f"NEW: {date_title} - {span_title} - {habr_main + title.get('href')}")
+                print(f"NEW: {date} - {article_title} - {habr_main + href}")
         elif search_in == 'tags':
             if KEYWORDS & hubs:
-                print(f"{number}.{date_title} - {span_title} - {habr_main + title.get('href')}")
+                print(f"{number}.{date} - {article_title} - {habr_main + href}")
                 number += 1
         if search_in == 'full':
-            article_href = title.get('href')
-            response_article = requests.get(habr_main + article_href)
+            response_article = requests.get(habr_main + href)
             text_article = response_article.text
             soup_article = BeautifulSoup(text_article, features='html.parser')
             content_tag = soup_article.find('article', class_="tm-article-presenter__content tm-article-presenter__content_narrow")
-            article_text = content_tag.get_text()
-            article_text_split = article_text.split()
-            if KEYWORDS.intersection(article_text_split):
-                print(f"{number}.{date_title} - {span_title} - {habr_main + article_href}")
+            try:
+                article_text = content_tag.get_text()
+            except AttributeError:
+                content_tag = soup_article.find('div', id='post-content-body')
+            article_text = content_tag.get_text().split()
+            if KEYWORDS.intersection(article_text):
+                print(f"{number}.{date} - {article_title} - {habr_main + href}")
                 number += 1
 
 
