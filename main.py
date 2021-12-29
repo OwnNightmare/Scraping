@@ -1,4 +1,5 @@
 import requests
+# import tqdm
 from bs4 import BeautifulSoup
 import json
 import make_json
@@ -59,14 +60,18 @@ def web_scraping(search_in: str):
             text_article = response_article.text
             soup_article = BeautifulSoup(text_article, features='html.parser')
             content_tag = soup_article.find('article', class_="tm-article-presenter__content tm-article-presenter__content_narrow")
-            try:
-                article_text = content_tag.text
-            except AttributeError as error:
+            if not content_tag:
                 content_tag = soup_article.find('div', id='post-content-body')
-                # print(error)
+                if not content_tag:
+                    continue
+            # try:
+            #     article_text = content_tag.text
+            # except AttributeError as error:
+            #     content_tag = soup_article.find('div', id='post-content-body')
+            #     print(error)
             article_text = content_tag.get_text().split()
             if KEYWORDS.intersection(article_text):
-                print(f"{number}.{date} - {article_title} - {habr_main + href}")
+                print(f"{number}.{date} - {article_title} - {habr_main + href} ({KEYWORDS & set(article_text)})")
                 number += 1
 
 
