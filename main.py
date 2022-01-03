@@ -1,8 +1,8 @@
 import requests
-# import tqdm
 from bs4 import BeautifulSoup
 import json
 import make_json
+from my_decorators import improve_decor
 
 
 def get_headers():
@@ -12,6 +12,7 @@ def get_headers():
     return headers
 
 
+@improve_decor('log_file.txt')
 def web_scraping(search_in: str):
     KEYWORDS = {'Дизайн', "Web", 'Python', 'IT-инфраструктура', "Здоровье", "История IT", 'Карьера в IT-индустрии',
                 'SmartSpeech'}
@@ -37,7 +38,7 @@ def web_scraping(search_in: str):
             hubs = set(hub.find('span').text for hub in hubs)
             article_title = title.find('span').text
             date = date_tag.find('time').get('title')
-        else:
+        elif article.find('div', class_='tm-megapost-snippet') is not None:
             preview = article.find('div', class_='tm-megapost-snippet').text
             preview = preview.split()
             article_title = article.find('h2', class_='tm-megapost-snippet__title').text
@@ -45,6 +46,8 @@ def web_scraping(search_in: str):
             href = article.find('a', class_='tm-megapost-snippet__link tm-megapost-snippet__date').get('href')
             hubs = article.find_all('li', class_="tm-megapost-snippet__hub")
             hubs = set(hub.find('span').text for hub in hubs)
+        else:
+            continue
         if search_in == 'preview':
             if KEYWORDS.intersection(preview):
                 print(f"{number}.{date} - {article_title} - {habr_main + href}")

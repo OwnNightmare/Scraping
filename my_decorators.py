@@ -17,15 +17,15 @@ def improve_decor(path: str):
     return logger
 
 
-decor = improve_decor('new.txt')
+# decor = improve_decor('new.txt')
+#
+#
+# @decor
+# def multiply(a, b):
+#     return a**b
 
 
-@decor
-def multiply(a, b):
-    return a**b
-
-
-print(multiply(2, 5))
+# print(multiply(2, 5))
 
 
 
